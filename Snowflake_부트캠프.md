@@ -13,3 +13,5 @@
 - Search Optimization : 범위 쿼리는 효과 없음.
 - stream - retention 기간 있음. stream에 있는 데이터를 사용할때 소비한다라고 함.
 - task , stream 연계작업을 다이나믹 테이블이 간결하게 해결해
+- snowflake에서는 기본키, 외래키를 명시적으로 쓸 수는 있지만 제약조건으로는 사용하지 못함. 그래서 데이터 중복되서 들어갈 수 있음. 유일한 제약조건은 not null 임.
+- 권한 줄때 usage 만 주면 객체의 이름만 조회 가능.
