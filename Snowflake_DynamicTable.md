@@ -47,3 +47,5 @@ var:lname::string last_name FROM raw;
 ### 1-5. Dynamic Table 작동방식
 
 ![dynamic_table](./image/dynamic_table.png)
+
+- Dynamic Table을 만들때 "target lag"를 활용해 base 테이블이 업데이트 되고 target lag 값만큼 Dynamic Table 업데이트를 지연시킬 수 있음. 비용 절감을 위해서는 target lag 시간을 사용자에게 적절할 만큼만 늘려야 함.
