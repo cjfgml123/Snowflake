@@ -1,23 +1,25 @@
 # 1. Snowflake Dynamic Table
 
-- 참고 : https://docs.snowflake.com/en/user-guide/dynamic-tables-about#a-simple-example
+- 참고 : https://docs.snowflake.com/en/user-guide/dynamic-tables-about
 
 ### 1-1. Dynamic Table Overview
 
 - 선언적 데이터 변환 파이프라인의 구성요소로 사용할 데이터를 안정적이고 비용 효율적이며 자동화된 방식으로 변환할 수 있음.
-- 데이터 변환 단계를 일련의 작업으로 정의하고 스케줄링을 모니터링해야 하는 대신 Dynamic Table을 사용하여 단순화할 수 있음.
+- 데이터 변환 단계를 Snowflake의 Task로 정의하고 스케줄링을 모니터링해야 하는 대신 Dynamic Table을 사용하여 단순화할 수 있음.
 
 ### 1-2. Dynamic Table 정의
 
-- 사용자가 지정한 쿼리의 결과를 구체화하는 테이블로 별도의 대상 테이블을 생성하고 해당 테이블의 데이터를 변환 및 업데이트하는 코드를 작성하는 대신 대상 테이블을 Dynamic Table로 정의하고 변환을 수행하는 SQL문을 지정할 수 있음.
+- Dynamic Table은 사용자가 지정한 쿼리의 결과를 구체화하는 Table임. 별도의 Target Table을 생성하고 해당 Table의 데이터를 변환 및 업데이트하는 코드를 작성하는 대신 Target 테이블을 Dynamic Table로 정의하고 변환을 수행하는 SQL문을 지정할 수 있음.
+- 정기적인 업데이트를 통해 Dynamic Table의 데이터는 자동으로 업데이트 됨.
 - 참고 및 주의사항
-  - Dynamic Table은 지정된 쿼리에 의해 완전히 결정되므로 DML을 통해 데이터 변경 불가(삽입, 업데이트 or 삭제) 못함.
+  - Dynamic Table은 지정된 쿼리에 의해 완전히 결정되므로 DML을 통해 Dynamic Table의 데이터 변경 불가(삽입, 업데이트 or 삭제) 못함.
   - Dynamic Table이 있는 Database는 Replicating이 불가함. 하려면 DB를 복제하기 전에 DB의 Dynamic Table을 삭제해야 함.
 
 ### 1-3. Dynamic Table Example
 
 - 기존 stream & Task SQL과 비교 : https://docs.snowflake.com/en/user-guide/dynamic-tables-about#a-simple-example
-- raw 테이블에 json 데이터가 들어올때 Dynamic Table은 TARGET_LAG 주기로 데이터 최신상태 유지.
+- raw 테이블에 json 데이터가 들어올때 Dynamic Table은 **"TARGET_LAG"** 주기로 데이터 최신상태 유지.
+- Stream & Task의 복잡성을 피할 수 있음. 
 
 ```sql
 -- Create a landing table to store
@@ -38,29 +40,31 @@ SELECT var:id::int id, var:fname::string first_name,
 var:lname::string last_name FROM raw;
 ```
 
-### 1-4. Dynamic Table 을 쓰면 좋은 Case
-
-- stream & task 의 복잡한 작업 필요 없음.
-- 여러 base 테이블을 사용하여 쿼리를 구체화 할 경우.
-- 세분화된 새로 고침 일정 제어가 필요하지 않음.
-
-### 1-5. Dynamic Table 작동방식
+### 1-4. Dynamic Table 작동방식
 
 ![dynamic_table](./image/dynamic_table.png)
 
-- Dynamic Table을 만들때 "target lag"를 활용해 base 테이블이 업데이트 되고 target lag 값만큼 Dynamic Table 업데이트를 지연시킬 수 있음. 비용 절감을 위해서는 target lag 시간을 사용자에게 적절할 만큼만 늘려야 함.
+- Dynamic Table을 만들때 TARGET LAG를 활용해 Base Table이 업데이트 된 후, TARGET LAG 값만큼 Dynamic Table 업데이트를 지연시킬 수 있음. 비용 절감을 위해서는 TARGET LAG 시간을 사용자에게 적절할 만큼만 늘려야 함.
 - Dynamic Table 끼리 조합해서 또 다른 Dynamic Table 생성 가능.
+
+### 1-5. Dynamic Table 관리하는데 필요한 Privileges
+
+| Privilege          | Usage                                                        |
+| :----------------- | :----------------------------------------------------------- |
+| SELECT             | Dynamic Table의 SELECT 권한.                                 |
+| OPERATE            | Dynamic table의 속성을 변경하는데 필요함 :<br /> - "ALTER ... SUSPEND" <br /> - "ALTER ... RESUME"<br /> - "ALTER ... REFRESH"<br /> - WAREHOUSE and TARGET_LAG |
+| OWNERSHIP          | Dynamic Table에 대한 전체 제어 권한을 부여해야함.            |
+| ALL [ PRIVILEGES ] | Grants all privileges, except OWNERSHIP, on the dynamic table. |
 
 ### 1-6. Dynamic Table Refresh Types
 
-- Incremental refresh
+#### 1-6-1) **Incremental refresh**
 
-  - base 테이블과 Dynamic Table에 구체화된 쿼리를 기반으로 Dynamic Table이 마지막으로 새로 고쳐진 이후의 변경 사항만 기존의 Dynamic Table의 데이터와 병합하는 방식
-- Full refresh
+- base 테이블과 Dynamic Table에 구체화된 쿼리를 기반으로 Dynamic Table이 마지막으로 새로 고쳐진 이후의 변경 사항만 기존의 Dynamic Table의 데이터와 병합하는 방식
 
+- **Full refresh**
   - base 테이블과 Dynamic Table에 구체화된 쿼리를 기반으로 Dynamic Table의 모든 데이터를 다시 구성함.
-- 참고사항
-
+- **참고사항**
   - Dynamic Table을 생성한 후 테이블을 모니터링하여 해당 테이블을 업데이트 하는데 Incremental refresh 또는 Full refresh를 사용하는지 확인 가능.
   - Dynamic Table의 생성 쿼리를 기반으로 Incremental refresh를 사용할 수 있는지 여부를 결정함. Incremental refresh를 지원하지 않은 쿼리 일때 Full refresh 방식으로 Dynamic Table을 업데이트 함. 
     - 참고(Incremental refesh 지원 쿼리) : https://docs.snowflake.com/en/user-guide/dynamic-tables-refresh#label-dynamic-tables-intro-refresh-queries => Types of Queries That Support Incremental Refreshes 섹션 
