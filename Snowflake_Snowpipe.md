@@ -38,7 +38,7 @@
 
 ![snowpipe_supportStorage](./image/snowpipe_supportStorage.PNG)
 
-#### 1-3. Snowpipe 와 Bulk Data Loading 비교 및 차이점
+#### 1-2. Snowpipe 와 Bulk Data Loading 비교 및 차이점 (보완 필요) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
 - 참고 : 
   - https://docs.snowflake.com/en/user-guide/data-load-snowpipe-intro
@@ -51,11 +51,11 @@
 | Compute Resources | <u>Snowflake에서 제공하는 계산 리소스</u>                    | COPY 문을 사용하기 위해 사용자 지정 warehouse 필요           |
 | Cost              | 파일을 로드하는 동안 Snowpipe 웨어하우스에서 사용된 계산 리소스에 따라 청구됨. | 각 가상 웨어하우스가 활성화된 시간에 대해 청구됨.            |
 
-#### 1-4. Pipe 사용 쿼리
+#### 1-3. Pipe 사용 쿼리
 
 - 자주 사용하는 파라미터만 표기함. 상세 파라미터 내용은 **참고 링크**로 이동.
 
-##### 1-4-1. Create pipe
+##### 1-3-1. Create pipe
 
 - 참고 :  https://docs.snowflake.com/en/sql-reference/sql/create-pipe
 
@@ -79,7 +79,7 @@
     file_format = (type = 'JSON');
   ```
 
-##### 1-4-2. Alter pipe
+##### 1-3-2. Alter pipe
 
 - 참고 : https://docs.snowflake.com/en/sql-reference/sql/alter-pipe
 
@@ -112,7 +112,7 @@
   ALTER PIPE mypipe REFRESH PREFIX='d1/' MODIFIED_AFTER='2018-07-30T13:56:46-07:00';
   ```
 
-##### 1-4-3. Drop pipe
+##### 1-3-3. Drop pipe
 
 - 지정된 스키마에서 지정된 Pipe를 제거함.
 
@@ -126,7 +126,7 @@
   +------------------------------+
   ```
 
-##### 1-4-4. Describe pipe
+##### 1-3-4. Describe pipe
 
 - 참고 : https://docs.snowflake.com/sql-reference/sql/desc-pipe
 
@@ -159,7 +159,7 @@
     | `error_integration`    | 알림을 트리거하기 위해 S3의 error events에 의존하는 Pipe에 대한 알림 통합 이름. |
     | `invalid_reason`       | Pipe에 문제가 있을 수 있는 일부 세부 정보를 표시함. 문제 없을 시 값은 NULL. |
 
-##### 1-4-5. SHOW pipe
+##### 1-3-5. SHOW pipe
 
 - 참고 : https://docs.snowflake.com/sql-reference/sql/show-pipes
 
@@ -174,7 +174,7 @@
 
   - desc는 특정 pipe에 대한 정보를 출력하고, show pipes; 는 지정된 범위의 모든 pipe 정보를 조회할 수 있음.
 
-##### 1-4-6. Pipe status 조회
+##### 1-3-6. Pipe status 조회
 
 ```sql
 -- pipe의 현재 상태를 알 수 있음.
