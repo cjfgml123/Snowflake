@@ -290,7 +290,7 @@ SYSTEM$PIPE_STATUS( '<pipe_name>' )
 
 ##### 4-1-2. Step 2: Create the IAM Role in AWS
 
-- IAM Role을 생성 후 Step1에서의 IAM 정책과 연결한다. 후에 Snowflake의 storage Integraion에 사용할 예정.
+- IAM Role을 생성 후 Step1에서의 IAM 정책과 연결한다. 후에 Snowflake의 storage Integration에 사용할 예정.
 - 역할 섹션으로 이동 후, 새 IAM 역할을 만든다.
 
   - ![role_ui](./image/role_ui.PNG)
@@ -367,7 +367,10 @@ SYSTEM$PIPE_STATUS( '<pipe_name>' )
   - Snowflake 가상 웨어하우스는 지정된 파이프에 정의된 쿼리문을 기반으로 대기열에 있는 파일의 데이터를 Target Table로 로드함.
   - ![pipe_noti](./image/pipe_noti.PNG)
 - 데이터가 있는 S3 버킷 경로에 대한 S3 이벤트 알림이 있는지 확인 필요.
-- **참고사항** : S3 버킷에 충돌하는 이벤트 알림이 있는 경우 "옵션2(참고->Determining the Correct Option)"로 수행, AWS는 동일한 대상 경로에 대해 충돌하는 알림을 생성하는 것을 금지함.
+- **참고사항** :
+
+  - S3 버킷에 충돌하는 이벤트 알림이 있는 경우 "옵션2(참고->Determining the Correct Option)"로 수행, AWS는 동일한 대상 경로에 대해 충돌하는 알림을 생성하는 것을 금지함.
+    - 참고 : https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-s3#determining-the-correct-option
 - **Step 1** : Create a Stage
 
   - CREATE STAGE 명령을 사용하여 S3 버킷을 참조하는 외부 Stage를 생성함.
