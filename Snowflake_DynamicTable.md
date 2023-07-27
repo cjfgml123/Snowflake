@@ -58,35 +58,51 @@ var:lname::string last_name FROM raw;
 
 ### 1-6. Dynamic Table Refresh Types
 
+- Dynamic Table 에서 **Refresh** 의 의미 :
+  - Dynamic Table을 생성할 때 정의된 쿼리에서 사용되는 Base 객체들의 데이터가 변경되면 이러한 변경사항을 반영하도록 Dynamic Table을 업데이트해야 하는데 이러한 업데이트를 **Refresh** 라고 함.
+
 #### 1-6-1) **Incremental refresh**
 
-- base 테이블과 Dynamic Table에 구체화된 쿼리를 기반으로 Dynamic Table이 마지막으로 새로 고쳐진 이후의 변경 사항만 기존의 Dynamic Table의 데이터와 병합하는 방식
+- Dynamic Table 생성할 때의 쿼리를 분석하고, 쿼리 결과에 대한 변경사항(Dynamic Table이 마지막으로 새로 고침된 이후의 변경사항)을 계산하여, 이러한 변경사항을 기존의 Dynamic Table과 병합함.
 
-- **Full refresh**
-  - base 테이블과 Dynamic Table에 구체화된 쿼리를 기반으로 Dynamic Table의 모든 데이터를 다시 구성함.
-- **참고사항**
-  - Dynamic Table을 생성한 후 테이블을 모니터링하여 해당 테이블을 업데이트 하는데 Incremental refresh 또는 Full refresh를 사용하는지 확인 가능.
-  - Dynamic Table의 생성 쿼리를 기반으로 Incremental refresh를 사용할 수 있는지 여부를 결정함. Incremental refresh를 지원하지 않은 쿼리 일때 Full refresh 방식으로 Dynamic Table을 업데이트 함. 
-    - 참고(Incremental refesh 지원 쿼리) : https://docs.snowflake.com/en/user-guide/dynamic-tables-refresh#label-dynamic-tables-intro-refresh-queries => Types of Queries That Support Incremental Refreshes 섹션 
+#### 1-6-2) **Full refresh**
+
+- Dynamic Table 생성할 때의 쿼리를 분석하고, 기존의 Dynamic Table의 모든 데이터를 완전히 대체함.
+
+#### 1-6-3) 참고사항
+
+- Dynamic Table을 생성한 후 테이블을 모니터링하여 해당 테이블을 업데이트 하는데 Incremental refresh 또는 Full refresh를 사용하는지 확인 가능.
+
+  - ```sql
+    -- Dynamic Table 을 생성한 후 밑의 쿼리를 실행한다. 
+    -- 결과에서 refresh_mode를 확인한다.
+    show dynamic tables;
+    ```
+
+- **Dynamic Table의 생성 쿼리를 기반**으로 Incremental refresh를 사용할 수 있는지 **여부를 결정**함. Incremental refresh를 지원하지 않은 쿼리 일때 Full refresh 방식으로 Dynamic Table을 업데이트 함. 
+
+  - 참고(Incremental refesh 지원 쿼리) : https://docs.snowflake.com/en/user-guide/dynamic-tables-refresh#label-dynamic-tables-intro-refresh-queries 
 
 ### 1-7. Dynamic Table Lag 지정방법
 
-- Measure of freshness
-  - TARGET_LAG = {`<num> {seconds| ... | days }`}
-  - 일반적으로 TARGET_LAG 주기 동안 Dynamic Table 업데이트
-  
-- DOWNSTREAM
-  - Dynamic Table에 종속된 다른 Dynamic Table을 새로 고쳐야 할 때 사용.
-  - Downstream Dynamic Table은 upstream 소비자가 필요로 하는 경우에만 업데이트 됨.
-  
-- 동작 예시 
+#### 1-7-1. Measure of freshness
 
-  - | DT1                     | DT2                     | Refresh results                                              |
-    | ----------------------- | ----------------------- | ------------------------------------------------------------ |
-    | TARGET_LAG = DOWNSTREAM | TARGET_LAG= 10minutes   | DT2가 10분마다 업데이트 될 때, DT2가 업데이트를 요구할 때마다 DT1도 업데이트 됨. |
-    | TARGET_LAG= 10minutes   | TARGET_LAG = DOWNSTREAM | 이 경우는 DT2를 소비하는 소비자가 정의될 때까지 DT2는 정기적으로 업데이트 되지 않음. DT1은 10분마다 업데이트. |
-    | TARGET_LAG= 5minutes    | TARGET_LAG= 10minutes   | DT2 is updated approximately every 10 minutes with data from DT2 that is at most 5 minutes old. |
-    | TARGET_LAG = DOWNSTREAM | TARGET_LAG = DOWNSTREAM | DT2 is not refreshed periodically as DT1 has no downstream children with a defined lag. |
+- TARGET_LAG = {`<num> {seconds| ... | days }`}
+- 일반적으로 TARGET_LAG 주기 동안 Dynamic Table 업데이트
+
+#### 1-7-2. DOWNSTREAM
+
+- Dynamic Table에 종속된 다른 Dynamic Table을 새로 고쳐야 할 때 사용.
+- Downstream Dynamic Table은 Upstream 소비자가 필요로 하는 경우에만 업데이트 됨.
+
+#### 1-7-3. 동작 예시 
+
+- | DT1                     | DT2                     | Refresh results                                              |
+  | ----------------------- | ----------------------- | ------------------------------------------------------------ |
+  | TARGET_LAG = DOWNSTREAM | TARGET_LAG= 10minutes   | DT2가 10분마다 업데이트 될 때, DT2가 업데이트를 요구할 때마다 DT1도 업데이트 됨. |
+  | TARGET_LAG= 10minutes   | TARGET_LAG = DOWNSTREAM | 이 경우는 DT2를 소비하는 소비자가 정의될 때까지 DT2는 정기적으로 업데이트 되지 않음. DT1은 10분마다 업데이트. |
+  | TARGET_LAG= 5minutes    | TARGET_LAG= 10minutes   | DT2는  5분마다 업데이트가 되는 DT1의 데이터로 DT2가 10분마다 업데이트 됨. |
+  | TARGET_LAG = DOWNSTREAM | TARGET_LAG = DOWNSTREAM | DT2를 소비하는 소비자가 없어, DT2는 주기적으로 업데이트 되지 않음. |
 
 
 ![dynamicTable_lag](./image/dynamicTable_lag.PNG)
@@ -96,29 +112,36 @@ var:lname::string last_name FROM raw;
 - 참고 : https://docs.snowflake.com/en/user-guide/dynamic-tables-comparison
 
 - | Streams and Tasks                                            | Dynamic Tables                                               |
-  | ------------------------------------------------------------ | ------------------------------------------------------------ |
-  | non-deterministic code,stored procedures, other tasks, UDF & external function 사용 가능 | stored procedures and tasks, UDF and external function 에 대한 호출 사용불가. Shared tables, external tables, MV, dynamic table에 대한 view |
-
+  | :----------------------------------------------------------- | ------------------------------------------------------------ |
+  | Task내에서 **사용할 수 있는 쿼리**는 non-deterministic code,Stored procedures, other tasks, UDF & External function 등에 대한 호출을 포함함. | Stored procedures and Tasks, UDF and External function 에 대한 호출 사용불가. Shared tables, External tables, MV, Dynamic table에 대한 View |
+  | Task는 명령적 접근법을 사용. Base Table에서 데이터를 변환하기 위해 Stream과 같은 객체를 참조하고 조건에 맞는 절차 코드를 작성함. | Dynamic Table은 선언적 접근법을 사용. 보고 싶은 결과를 지정하는 쿼리를 작성하면 쿼리에 사용된 Base Table에서 데이터가 검색되고 변환됨. |
+  
 - non-deterministic code 목록 : https://docs.snowflake.com/en/user-guide/dynamic-tables-tasks-create#label-dynamic-tables-intro-supported-nondeterministic-functions
 
 ### 1-9. Dynamic Table vs MV
 
 | MV                                                           | Dynamic Table                                                |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 단일 base Table만 사용 가능. (join or 중첩된 View) 기반인 것들 사용불가 | join 및 union을 포함할 수 있는 복잡한 쿼리를 기반으로 사용가능. |
-| 백그라운드로 업데이트 되기 때문에 항상 최신 데이터 유지.     | Target lag time 까지 최신 데이터 유지.                       |
+| 단일 base Table만 사용 가능. Base Table로 (join or 중첩된 View) 는 사용불가. | Base Table로 join 및 union을 포함할 수 있는 복잡한 쿼리를 사용가능. |
+| 백그라운드로 업데이트 되기 때문에 항상 업데이트된 데이터를 MV로 조회할 수 있음. | Target lag 시간 마다 업데이트된 데이터를 Dynamic Table로 조회할 수 있음. |
 
 ### 1-10. Dynamic Table States
 
 - 참고 : https://docs.snowflake.com/en/user-guide/dynamic-tables-states
 
-- Dynamic Table의 scheduling state를 보려면 **DYNAMIC_TABLE_GRAPH_HISTORY** 테이블 호출 후 SCHELLING_STATE 열을 검사.
+- Dynamic Table의 scheduling state를 보려면 **DYNAMIC_TABLE_GRAPH_HISTORY** 테이블 호출 후 "**SCHELLING_STATE**" 컬럼을 확인한다.
 
 ### 1-11. Streams and Dynamic Tables
 
-- Dynamic Table은 standard stream만 지원함.
 - Dynamic Table에 대한 stream 생성 가능.
-- Dynamic Table의 Refresh Type에 따라 stream 동작 방식이 다름. incrementally일 경우, base Dynamic Table의 변경 내용을 기반으로 이벤트 집합을 발생 시키고, fully 방식일 경우, Dynamic Table 데이터 전체가 새로 고침되므로 stream에 모든 행에 대한 이벤트 행이 발생함.  
+  - Dynamic Table은 **Standard stream**만 지원함.
+
+
+- Dynamic Table의 Refresh Type에 따라 stream 동작 방식이 다름.
+  -  Incrementally일 경우 : 
+    - Base Dynamic Table의 변경 내용을 기반으로 이벤트 집합을 발생 시킴.
+  - Fully 방식일 경우 :
+    - Dynamic Table 데이터 전체가 새로 고침되므로 stream에 모든 행에 대한 이벤트 행이 발생함.  
 
 ```sql
 -- Create the dynamic table, for reference only
