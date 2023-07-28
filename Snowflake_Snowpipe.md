@@ -38,18 +38,18 @@
 
 ![snowpipe_supportStorage](./image/snowpipe_supportStorage.PNG)
 
-#### 1-2. Snowpipe 와 Bulk Data Loading 비교 및 차이점 (보완 필요) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+#### 1-2. Snowpipe 와 Bulk Data Loading 비교 및 차이점
 
 - 참고 :
   - https://docs.snowflake.com/en/user-guide/data-load-snowpipe-intro
   - https://docs.snowflake.com/en/user-guide/data-load-overview
 
-| 비교항목          | Snowpipe                                                                                           | Bulk Data load(Copy INTO)                                                                                          |
-| ----------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Load History      | pipe의 메타데이터에 14일 동안 저장.                                                                | 64일 동안 Target 테이블의 메타데이터에 저장됨.                                                                     |
-| Transactions      | 데이터 Load는 각 데이터 파일의 행 수와 size에 따라 단일 또는 여러 트랜잭션으로 결합되거나 분할 됨. | `<u>`항상 단일 트랜잭션에서 수행됨. 데이터는 사용자가 수동으로 제출한 다른 SQL문과 함께 테이블에 삽입됨.`</u>` |
-| Compute Resources | `<u>`Snowflake에서 제공하는 계산 리소스 `</u>`                                                 | COPY 문을 사용하기 위해 사용자 지정 warehouse 필요                                                                 |
-| Cost              | 파일을 로드하는 동안 Snowpipe 웨어하우스에서 사용된 계산 리소스에 따라 청구됨.                     | 각 가상 웨어하우스가 활성화된 시간에 대해 청구됨.                                                                  |
+| 비교항목          | Snowpipe                                                     | Bulk Data load(Copy INTO)                                    |
+| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Load History      | pipe의 메타데이터에 14일 동안 저장.                          | 64일 동안 Target 테이블의 메타데이터에 저장됨.               |
+| Transactions      | 데이터 Load는 각 데이터 파일의 행 수와 size에 따라 단일 또는 여러 트랜잭션으로 결합되거나 분할 됨. | 항상 단일 트랜잭션에서 수행됨. 데이터는 사용자가 수동으로 제출한 다른 SQL문과 함께 테이블에 삽입됨. |
+| Compute Resources | Snowflake에서 제공하는 계산 리소스                           | COPY 문을 사용하기 위해 사용자 지정 warehouse 필요           |
+| Cost              | 파일을 로드하는 동안 Snowpipe 웨어하우스에서 사용된 계산 리소스에 따라 청구됨. | 각 가상 웨어하우스가 활성화된 시간에 대해 청구됨.            |
 
 #### 1-3. Pipe 사용 쿼리
 
@@ -90,20 +90,20 @@
 - ```sql
   -- pipe 일시 중지 예제 , 주로 pipe 소유권 변경이 될때 사용됨.
   alter pipe mypipe SET PIPE_EXECUTION_PAUSED = true;
-
+  
   -- comment Add or modify 예제
   alter pipe mypipe SET COMMENT = "Pipe for North American sales data";
-
+  
   -- Refreshing 쿼리 예제
   CREATE PIPE mypipe AS COPY INTO mytable FROM @mystage/path1/;
-
+  
   -- REFRESH : snowpipe가 파일의 하위 집합을 로드하지 못할 때 특정 문제를 해결하기 위해 단기적으로 사용하기 위한것으로 정기적으로 사용하기 위한 것이 아님.
   ALTER PIPE mypipe REFRESH;
-
+  
   -- 로드할 파일 목록 추가 제한 예제
   -- @mystage/path1/d1 에서 파일 로드함.
   ALTER PIPE mypipe REFRESH PREFIX='d1/';
-
+  
   -- 지정된 타임 이후에 staged된 파일만 로드함.
   ALTER PIPE mypipe REFRESH PREFIX='d1/' MODIFIED_AFTER='2018-07-30T13:56:46-07:00';
   ```
@@ -113,7 +113,7 @@
 - 지정된 스키마에서 지정된 Pipe를 제거함.
 - ```sql
   DROP PIPE IF EXISTS mypipe;
-
+  
   +------------------------------+
   | status                       |
   |------------------------------|
@@ -127,7 +127,7 @@
 - Pipe에 대해 지정된 속성을 설명함.
 - ```sql
   desc pipe mypipe;
-
+  
   +-------------------------------+--------+---------------+-------------+---------------------------------+----------+---------+
   | created_on                    | name   | database_name | schema_name | definition                      | owner    | comment |
   |-------------------------------+--------+---------------+-------------+---------------------------------+----------+---------|
@@ -157,7 +157,7 @@
 - ```sql
   -- db에 있는 모든 파이프 조회 쿼리 예제
   use database mydb;
-
+  
   show pipes;
   ```
 - Output : desc pipe mypipe; 와 같음.
@@ -318,7 +318,7 @@ SYSTEM$PIPE_STATUS( '<pipe_name>' )
     STORAGE_AWS_ROLE_ARN = '<iam_role>' -- AWS에서 IAM -> role 에서 만든 역할의 ARN(AWS에서 조회 가능)
     STORAGE_ALLOWED_LOCATIONS = ('s3://<bucket>/<path>/', 's3://<bucket>/<path>/') -- stage에서 참조할 수 있는 버킷
     STORAGE_BLOCKED_LOCATIONS = ('s3://<bucket>/<path>/', 's3://<bucket>/<path>/'); -- stage에서 참조 할수 없는 버킷
-
+  
   -- STORAGE_AWS_IAM_USER_ARN, STORAGE_AWS_EXTERNAL_ID 두 개의 정보를 AWS -> IAM -> role -> 생성한 role -> 신뢰 관계에서 편집 
   -- STORAGE_AWS_EXTERNAL_ID  : The external ID that is needed to establish a trust relationship.
     desc integration chlee_intergration; -- desc : describe
@@ -379,7 +379,7 @@ SYSTEM$PIPE_STATUS( '<pipe_name>' )
      CREATE STAGE mystage
       URL = 's3://<bucket>/snowflake/' -- 사용자 버킷
       STORAGE_INTEGRATION = chlee_intergration; -- 4-1-3. Step 3에서 만든 Integration
-
+    
     ```
 - **Step 2** : Create a Pipe with Auto-Ingest Enabled
 
@@ -411,24 +411,24 @@ SYSTEM$PIPE_STATUS( '<pipe_name>' )
     - ```sql
       -- Create a role to contain the Snowpipe privileges
       use role securityadmin;
-
+      
       create or replace role snowpipe1;
-
+      
       -- Grant the required privileges on the database objects
       grant usage on database snowpipe_db to role snowpipe1;
-
+      
       grant usage on schema snowpipe_db.public to role snowpipe1;
-
+      
       grant insert, select on snowpipe_db.public.mytable to role snowpipe1;
-
+      
       grant usage on stage snowpipe_db.public.mystage to role snowpipe1;
-
+      
       -- Grant the OWNERSHIP privilege on the pipe object
       grant ownership on pipe snowpipe_db.public.mypipe to role snowpipe1;
-
+      
       -- Grant the role to a user
       grant role snowpipe1 to user jsmith;
-
+      
       -- Set the role as the default role for the user
       alter user jsmith set default_role = snowpipe1;
       ```
