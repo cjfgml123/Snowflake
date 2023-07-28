@@ -81,7 +81,8 @@ var:lname::string last_name FROM raw;
 
 - **Dynamic Table의 생성 쿼리를 기반**으로 Incremental refresh를 사용할 수 있는지 **여부를 결정**함. Incremental refresh를 지원하지 않은 쿼리 일때 Full refresh 방식으로 Dynamic Table을 업데이트 함. 
 
-  - 참고(Incremental refesh 지원 쿼리) : https://docs.snowflake.com/en/user-guide/dynamic-tables-refresh#label-dynamic-tables-intro-refresh-queries 
+  - 참고(Incremental refesh 지원 쿼리) :
+    -  https://docs.snowflake.com/en/user-guide/dynamic-tables-refresh#label-dynamic-tables-intro-refresh-queries 
 
 ### 1-7. Dynamic Table Lag 지정방법
 
@@ -131,6 +132,13 @@ var:lname::string last_name FROM raw;
 
 - Dynamic Table의 scheduling state를 보려면 **DYNAMIC_TABLE_GRAPH_HISTORY** 테이블 호출 후 "**SCHELLING_STATE**" 컬럼을 확인한다.
 
+  - ```sql
+    select * from table(INFORMATION_SCHEMA.DYNAMIC_TABLE_GRAPH_HISTORY());
+    ```
+
+  - ![dynamic_status](./image/dynamic_status.PNG)
+
+
 ### 1-11. Streams and Dynamic Tables
 
 - Dynamic Table에 대한 stream 생성 가능.
@@ -139,14 +147,18 @@ var:lname::string last_name FROM raw;
 
 - Dynamic Table의 Refresh Type에 따라 stream 동작 방식이 다름.
   -  Incrementally일 경우 : 
-    - Base Dynamic Table의 변경 내용을 기반으로 이벤트 집합을 발생 시킴.
+    - Base Dynamic Table의 **변경 내용**을 기반으로 이벤트 집합을 발생 시킴.
   - Fully 방식일 경우 :
-    - Dynamic Table 데이터 전체가 새로 고침되므로 stream에 모든 행에 대한 이벤트 행이 발생함.  
+    - Dynamic Table 데이터 **전체**가 새로 고침되므로 stream에 모든 행에 대한 이벤트 행이 발생함.  
 
 ```sql
 -- Create the dynamic table, for reference only
 CREATE OR REPLACE DYNAMIC table dtBase
-. . .  FROM baseTable;
+TARGET_LAG = '1 minute'
+WAREHOUSE = 'PENTA_WH'
+AS
+SELECT *
+FROM baseTable;
 
 -- Create the stream.
 CREATE OR REPLACE STREAM deltaStream on DYNAMIC TABLE dtBase;
@@ -166,16 +178,23 @@ CREATE OR REPLACE DYNAMIC TABLE product
     SELECT product_id, product_name FROM staging_table;
 ```
 
-- 참고사항 : Dynamic Table에서 사용하는 모든 개체의 change tracking이 활성화되어 있는지 확인 필요.
-  - change tracking 활성화 유무 확인 명령어 => show views , show tables 등.
+- 참고사항 : Dynamic Table에서 사용하는 모든 개체의 **Change tracking**이 활성화되어 있는지 확인 필요.
+  - change tracking 활성화 유무 확인 쿼리 => show views , show tables 등.
+  
   - change tracking 활성화 하려면 alter table , alter view 명령어로 활성화 하기.
+  
+    - ```sql
+      ALTER TABLE
+      	CHANGE_TRACKING = TRUE;
+      ```
 
 #### 1-12-2. Privileges Required to Create Dynamic Table
 
-- Table을 생성하기 위한 DB와 스키마에 대한 **USAGE** 권한
-- 테이블을 작성할 스키마에 **CREATE DYNAMIC TABLE** 권한
-- 동적 테이블에 대해 쿼리하려는 base Table(다른 동적테이블 포함) 및 View의 **SELECT** 권한
-- 동적 테이블을 refresh에 사용되는 warehouse에 **USAGE** 권한
+| **Privilege** | **Usage**                                                    |
+| ------------- | ------------------------------------------------------------ |
+| USAGE         | Dynamic Table을 생성하기 위한 Warehouse, DB, Schema 사용 권한. |
+| CREATE        | Table을 생성할 Schema에 CREATE DYNAMIC TABLE 권한.           |
+| SELECT        | Dynamic Table에 대해 쿼리 하려는 Base Table 및 View의 SELECT 권한. |
 
 #### 1-12-3. Dropping a Dynamic Table
 
@@ -185,7 +204,9 @@ DROP DYNAMIC TABLE product;
 
 #### 1-12-4. Dynamic Table Limitations and Supported Functions
 
-- 참고 : https://docs.snowflake.com/en/user-guide/dynamic-tables-tasks-create#label-dynamic-tables-intro-unsupported-constructs => 여기서 1-12-4 섹션.
+- 참고 :
+  -  https://docs.snowflake.com/en/user-guide/dynamic-tables-tasks-create#label-dynamic-tables-intro-unsupported-constructs
+
 
 #### 1-12-5. Using SQL commands to List Dynamic Tables and View Details
 
@@ -214,12 +235,35 @@ SHOW DYNAMIC TABLES -- REFRESH_MODE열의 값 확인
 
 #### 1-12-8. Managing Dynamic Tables Refresh
 
-- 동적 테이블 refresh는 다음 명령어로 제어 할 수 있음.
+![dynamic_relation](./image/dynamic_relation.PNG)
 
-| Task                    | Description                                    |
-| ----------------------- | ---------------------------------------------- |
-| Suspend                 | Suspend refreshes of a dynamic table.          |
-| Resume                  | Resume refreshes on a suspended dynamic table. |
-| Refresh Manually        | Trigger a manual refresh of dynamic table.     |
-| Alter Dynamic Table Lag | Alter or specify lag for a dynamic table.      |
+- Dynamic Table Refresh는 다음 명령어로 제어 할 수 있음.
+
+| Task                    | Description                                |
+| ----------------------- | ------------------------------------------ |
+| Suspend                 | Dynamic Table의 Refresh를 중단함.          |
+| Resume                  | Dynamic Table의 중단된 Refresh를 재개함.   |
+| Refresh Manually        | Dynamic Table의 Refresh를 수동으로 실행함. |
+| Alter Dynamic Table Lag | Dynamic Table의 Target Lag를 변경함.       |
+
+- 명령어 쿼리 예제
+
+```sql
+-- Suspend --
+-- DT Root 중단 시 DT Mid , DT End 모두 중단됨.
+ALTER DYNAMIC TABLE <NAME> SUSPEND;
+
+-- Resume --
+-- DT Root 재개 시 DT Mid, DT End 모두 재개됨.
+ALTER DYNAMIC TABLE <NAME> RESUME;
+
+-- Refresh Manually -- 
+-- DT End Refresh 할 시 DT Mid, DT Root 모두 Refresh됨.
+ALTER DYNAMIC TABLE <name> REFRESH;
+
+-- TARGET_LAG --
+ALTER DYNAMIC TABLE <name> SET TARGET_LAG = DOWNSTREAM;
+-- TARGET_LAG = {num} { seconds | minutes | hours | days }
+ALTER DYNAMIC TABLE <name> SET TARGET_LAG = '1 hour';
+```
 
