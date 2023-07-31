@@ -4,7 +4,7 @@
 
 ### 1. Snowpipe Overview
 
-- Snowpipe를 사용하면 파일이 snowpipe에 연결된 stage에 loading됨과 동시에 파일에서 데이터를 Target Table에 load할 수 있음.
+- Snowpipe를 사용하면 Object Storage(ex: S3)에 있는 파일이 Snowpipe와 연결된 외부 Stage에 loading됨과 동시에 파일 내부의 데이터를 Target Table에 자동으로 load할 수 있음.
 - 참조된 pipe에 정의된 COPY문에 따라 데이터가 load됨. (ex: copy into JSON_TABLE ...)
 - JSON 및 Avro와 같은 반정형 데이터를 포함한 모든 데이터 유형을 지원함.
 
@@ -30,7 +30,7 @@
 
 ##### 1-1-2. Calling Snowpipe REST Endpoints
 
-- pipe의 이름과 데이터 파일 이름 목록을 사용하여 REST endpoint를 호출함. pipe 객체에서 참조하는 stage에서 데이터 파일 이름 목록과 일치하는 새 데이터 파일이 발견되면 pipe가 load를 수행.
+- pipe의 이름과 데이터 파일 이름 목록을 사용하여 REST endpoint를 호출함. pipe 객체에서 참조하는 stage에 있는 데이터 파일 이름 목록과 일치하는 **새 데이터 파일**이 발견되면 pipe가 load를 수행.
 
 ##### 1-1-3. Supported Cloud Storage Services (1-1-1, 1-1-2 둘 다 가능)
 
@@ -44,12 +44,12 @@
   - https://docs.snowflake.com/en/user-guide/data-load-snowpipe-intro
   - https://docs.snowflake.com/en/user-guide/data-load-overview
 
-| 비교항목          | Snowpipe                                                     | Bulk Data load(Copy INTO)                                    |
-| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Load History      | pipe의 메타데이터에 14일 동안 저장.                          | 64일 동안 Target 테이블의 메타데이터에 저장됨.               |
+| 비교항목          | Snowpipe                                                                                           | Bulk Data load(Copy INTO)                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Load History      | pipe의 메타데이터에 14일 동안 저장.                                                                | 64일 동안 Target 테이블의 메타데이터에 저장됨.                                                      |
 | Transactions      | 데이터 Load는 각 데이터 파일의 행 수와 size에 따라 단일 또는 여러 트랜잭션으로 결합되거나 분할 됨. | 항상 단일 트랜잭션에서 수행됨. 데이터는 사용자가 수동으로 제출한 다른 SQL문과 함께 테이블에 삽입됨. |
-| Compute Resources | Snowflake에서 제공하는 계산 리소스                           | COPY 문을 사용하기 위해 사용자 지정 warehouse 필요           |
-| Cost              | 파일을 로드하는 동안 Snowpipe 웨어하우스에서 사용된 계산 리소스에 따라 청구됨. | 각 가상 웨어하우스가 활성화된 시간에 대해 청구됨.            |
+| Compute Resources | Snowflake에서 제공하는 계산 리소스                                                                 | COPY 문을 사용하기 위해 사용자 지정 warehouse 필요                                                  |
+| Cost              | 파일을 로드하는 동안 Snowpipe 웨어하우스에서 사용된 계산 리소스에 따라 청구됨.                     | 각 가상 웨어하우스가 활성화된 시간에 대해 청구됨.                                                   |
 
 #### 1-3. Pipe 사용 쿼리
 
