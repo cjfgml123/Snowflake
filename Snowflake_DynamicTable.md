@@ -5,7 +5,7 @@
 ### 1-1. Dynamic Table Overview
 
 - 선언적 데이터 변환 파이프라인의 구성요소로 사용할 데이터를 안정적이고 비용 효율적이며 자동화된 방식으로 변환할 수 있음.
-- 데이터 변환 단계를 Snowflake의 Task로 정의하고 스케줄링을 모니터링해야 하는 대신 Dynamic Table을 사용하여 단순화할 수 있음.
+- 데이터 변환 단계를 Snowflake의 **Task**로 정의하고 스케줄링을 모니터링해야 하는 대신 Dynamic Table을 사용하여 단순화할 수 있음.
 
 ### 1-2. Dynamic Table 정의
 
