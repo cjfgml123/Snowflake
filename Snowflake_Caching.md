@@ -43,9 +43,9 @@
 
 ##### 1-2-1. Metadata Cache
 
-- DB, Schema, Table, View 등에 대한 정보를 메모리에 저장함. 사용자가 DB객체의 정보를 쿼리하면 Snowflake는 개체의 메타데이터가 이미 Meatadata Cache에 있는지 확인 후, 있으면 캐시된 메타데이터를 반환함.
+- **DB, Schema, Table, View 등에 대한 메타 정보**를 메모리에 저장함. 사용자가 DB객체의 정보를 쿼리하면 Snowflake는 개체의 메타데이터가 이미 Meatadata Cache에 있는지 확인 후, 있으면 캐시된 메타데이터를 반환함.
 - Meatadata Cache는 시간 종속성이 없으며 테이블 데이터가 변경되도 상관없지만 Schema 도는 개체에 대한 정의가 변경되면 캐시된 정보는 사라진다.
-- Query Ex: Table 행 수, 테이블 크기, 컬럼의 최소 및 최대 값, 고유 값 수 및 NULL 수 등.
+- **Query Ex**: Table 행 수, 테이블 크기, 컬럼의 최소 및 최대 값, 고유 값 수 및 NULL 수 등.
 
   - ```sql
     -- 예시 쿼리 --
@@ -59,7 +59,7 @@
 
 - 사용자가 쿼리를 실행하면 Snowflake는 쿼리 결과가 이미 Result Cache에 있는지 자동으로 확인 후, 있으면 쿼리를 다시 실행하는 대신 캐시된 결과를 반환함.
 - 지난 24시간 동안 실행된 모든 쿼리의 결과를 보유함.
-- Results Cache를 사용하기 위해서는 :
+- Results Cache를 사용하기 위한 **조건** :
 
   - 새로운 쿼리는 기존의 실행했던 쿼리와 완전히 일치해야 함.
   - Base Table Data가 변경 되지 않아야 함.
